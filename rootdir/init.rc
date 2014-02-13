@@ -361,6 +361,17 @@ on boot
     chown system system /sys/kernel/ipv4/tcp_rmem_max
     chown root radio /proc/cmdline
 
+
+#add nfc file nod
+        mkdir -p  /data/nfc
+        mkdir -p /etc/param
+        chown nfc:nfc /data/nfc
+        chown  nfc:nfc /etc/param
+        setprop ro.nfc.port "I2C"
+        chmod 0777 /dev/pn544
+        chown  nfc:nfc /dev/pn544
+
+
 # Set these so we can remotely update SELinux policy
     chown system system /sys/fs/selinux/load
     chown system system /sys/fs/selinux/enforce
