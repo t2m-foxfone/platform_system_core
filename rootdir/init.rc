@@ -371,6 +371,9 @@ on boot
         chmod 0777 /dev/pn544
         chown  nfc:nfc /dev/pn544
 
+#tcl_czb@tcl.com modfiy /proc/cmdline file permissions (0440->0444),in order to be able to read the file.
+    chmod 0444 /proc/cmdline
+#tcl_czb@tcl.com modfiy /proc/cmdline file permissions (0440->0444),in order to be able to read the file.
 
 # Set these so we can remotely update SELinux policy
     chown system system /sys/fs/selinux/load
