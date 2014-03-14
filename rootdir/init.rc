@@ -23,7 +23,6 @@ on early-init
 
 # create mountpoints
     mkdir /mnt 0775 root system
-
 on init
 
 sysclktz 0
@@ -587,6 +586,13 @@ service mdnsd /system/bin/mdnsd
     socket mdnsd stream 0660 mdnsr inet
     disabled
     oneshot
+
+service nfcd /system/bin/nfcd
+    class main
+    oneshot
+    socket nfcd stream 660 nfc nfc
+    user nfc
+    group system
 
 service fakeperm /system/bin/fakeperm
     class main
