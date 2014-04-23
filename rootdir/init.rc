@@ -369,7 +369,8 @@ on boot
         setprop ro.nfc.port "I2C"
         chmod 0777 /dev/pn544
         chown  nfc:nfc /dev/pn544
-
+	pn547_set_xclk
+	
 #tcl_czb@tcl.com modfiy /proc/cmdline file permissions (0440->0444),in order to be able to read the file.
     chmod 0444 /proc/cmdline
 #tcl_czb@tcl.com modfiy /proc/cmdline file permissions (0440->0444),in order to be able to read the file.
