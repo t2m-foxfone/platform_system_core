@@ -67,9 +67,15 @@
 #define BATTERY_FULL_THRESH     95
 
 #define BACKLIGHT_TOGGLE_PATH "/sys/class/leds/lcd-backlight/brightness"
+#define CHARGER_LIGHT_PATH "/sys/class/leds/charger_light/brightness"
 
 #define LAST_KMSG_PATH          "/proc/last_kmsg"
 #define LAST_KMSG_MAX_SZ        (32 * 1024)
+
+#define CHARGER_LIGHT_ON 1
+#define CHARGER_LIGHT_OFF 0
+#define BAT_FULL 100
+#define BAT_LOW  0
 
 #define LOGE(x...) do { KLOG_ERROR("charger", x); } while (0)
 #define LOGI(x...) do { KLOG_INFO("charger", x); } while (0)
@@ -187,6 +193,7 @@ static struct charger charger_state = {
 static int char_width;
 static int char_height;
 
+static bool old_chg_light_status = 0;
 /*On certain targets the FBIOBLANK ioctl does not turn off the
  * backlight. In those cases we need to manually toggle it on/off
  */
@@ -216,6 +223,37 @@ cleanup:
         if (fd >= 0)
                 close(fd);
         return 0;
+}
+
+static int set_charger_light(int status)
+{
+    int fd = -1, ret = -1;
+    char buf[10];
+
+    memset(buf, 0, sizeof(buf));
+    fd = open(CHARGER_LIGHT_PATH, O_RDWR);
+    if(fd < 0) {
+        LOGE("open charger light path error: %s \n", strerror(errno));
+	goto out;
+    }
+
+    if (status) {
+        LOGE("Enable charger light \n");
+	snprintf(buf, sizeof(status), "%d", CHARGER_LIGHT_ON);
+    } else {
+        LOGE("Disable charger light \n");
+	snprintf(buf, sizeof(status), "%d", CHARGER_LIGHT_OFF);
+    }
+    if (write(fd, buf,strlen(buf)) < 0) {
+        LOGE("write charger light brightness error:%s",strerror(errno));
+	close(fd);
+	goto out;
+    }
+    close(fd);
+
+    ret = 0;
+out:
+    return ret;
 }
 /* current time in milliseconds */
 static int64_t curr_time_ms(void)
@@ -337,7 +375,7 @@ static int get_battery_capacity(struct charger *charger)
         return -1;
 
     ret = read_file_int(charger->battery->cap_path, &batt_cap);
-    if (ret < 0 || batt_cap > 100) {
+    if (ret < BAT_LOW || batt_cap > BAT_FULL) {
         batt_cap = -1;
     }
 
@@ -742,6 +780,22 @@ static void update_screen_state(struct charger *charger, int64_t now)
     struct animation *batt_anim = charger->batt_anim;
     int cur_frame;
     int disp_time;
+    int bat_cap = 0;
+    bool chg_light_status;
+
+    bat_cap = get_battery_capacity(charger);
+    if (bat_cap > BAT_LOW && bat_cap < BAT_FULL)
+	chg_light_status = true;
+    else
+	chg_light_status = false;
+
+    if (old_chg_light_status != chg_light_status) {
+	old_chg_light_status = chg_light_status;
+	if (chg_light_status)
+            set_charger_light(CHARGER_LIGHT_ON);
+        else
+            set_charger_light(CHARGER_LIGHT_OFF);
+    }
 
     if (!batt_anim->run || now < charger->next_screen_transition)
         return;
@@ -1007,6 +1061,7 @@ int main(int argc, char **argv)
     int64_t now = curr_time_ms() - 1;
     int fd;
     int i;
+    int bat_cap;
 
     list_init(&charger->supplies);
 
@@ -1061,6 +1116,16 @@ int main(int argc, char **argv)
     charger->next_pwr_check = -1;
     reset_animation(charger->batt_anim);
     kick_animation(charger->batt_anim);
+
+    bat_cap = get_battery_capacity(charger);
+    if (bat_cap > BAT_LOW && bat_cap < BAT_FULL) {
+	old_chg_light_status = true;
+        set_charger_light(CHARGER_LIGHT_ON);
+    }
+    else {
+	old_chg_light_status = false;
+        set_charger_light(CHARGER_LIGHT_OFF);
+    }
 
     event_loop(charger);
 
