@@ -356,6 +356,10 @@ on boot
     chown system system /sys/kernel/ipv4/tcp_rmem_max
     chown root radio /proc/cmdline
 
+#tcl_czb@tcl.com modfiy /proc/cmdline file permissions (0440->0444),in order to be able to read the file.
+    chmod 0444 /proc/cmdline
+#tcl_czb@tcl.com modfiy /proc/cmdline file permissions (0440->0444),in order to be able to read the file.
+
 # Set these so we can remotely update SELinux policy
     chown system system /sys/fs/selinux/load
     chown system system /sys/fs/selinux/enforce
