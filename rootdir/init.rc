@@ -360,6 +360,17 @@ on boot
     chmod 0444 /proc/cmdline
 #tcl_czb@tcl.com modfiy /proc/cmdline file permissions (0440->0444),in order to be able to read the file.
 
+
+#add nfc file nod
+        mkdir -p  /data/nfc
+        mkdir -p /etc/param
+        chown nfc:nfc /data/nfc
+        chown  nfc:nfc /etc/param
+        setprop ro.nfc.port "I2C"
+        chmod 0777 /dev/pn544
+        chown  nfc:nfc /dev/pn544
+	pn547_set_xclk
+
 # Set these so we can remotely update SELinux policy
     chown system system /sys/fs/selinux/load
     chown system system /sys/fs/selinux/enforce
@@ -566,6 +577,13 @@ service mdnsd /system/bin/mdnsd
     socket mdnsd stream 0660 mdnsr inet
     disabled
     oneshot
+
+service nfcd /system/bin/nfcd
+    class main
+    oneshot
+    socket nfcd stream 660 nfc nfc
+    user nfc
+    group system
 
 service fakeperm /system/bin/fakeperm
     class main
