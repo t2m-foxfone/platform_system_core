@@ -218,6 +218,10 @@ on post-fs-data
     mkdir /data/misc/systemkeys 0700 system system
     # give system access to wpa_supplicant.conf for backup and restore
     mkdir /data/misc/wifi 0770 wifi wifi
+# gaolu changed for testbox begin
+    mkdir /data/testbox_log 0777 shell shell
+    chmod -R 0777 /data/testbox_log
+# end
     chmod 0660 /data/misc/wifi/wpa_supplicant.conf
     mkdir /data/local 0751 root root
     mkdir /data/misc/media 0700 media media
@@ -388,9 +392,71 @@ on boot
     setprop net.tcp.buffersize.edge    4093,26280,35040,4096,16384,35040
     setprop net.tcp.buffersize.gprs    4092,8760,11680,4096,8760,11680
     setprop net.tcp.buffersize.evdo    4094,87380,262144,4096,16384,262144
-
+    setprop persist.sys.jrdgeckolog.enable    0
     class_start core
     class_start main
+#gaolu begin
+
+service bgservice /system/bin/sh /system/bin/bgservice
+    oneshot
+    disabled
+
+on property:persist.sys.tcllog.enable=1
+    start bgservice
+
+on property:persist.sys.tcllog.enable=0
+    stop bgservice
+
+service jrdlogcatservice /system/bin/sh /system/bin/jrdlogcatservice
+    oneshot
+    disabled
+
+on property:persist.sys.jrdlogcat.enable=1
+    start jrdlogcatservice
+
+on property:persist.sys.jrdlogcat.enable=0
+    stop jrdlogcatservice
+
+service jrdgeckologsvc /system/bin/sh /system/bin/jrdhttpgeckolog
+    oneshot
+    disabled
+
+on property:persist.sys.jrdgeckolog.enable=1
+    start jrdgeckologsvc
+
+on property:persist.sys.jrdgeckolog.enable=0
+    stop jrdgeckologsvc
+
+service jrddmesgservice /system/bin/sh /system/bin/jrddmesgservice
+    oneshot
+    disabled
+
+on property:persist.sys.jrddmesg.enable=1
+    start jrddmesgservice
+
+on property:persist.sys.jrddmesg.enable=0
+    stop jrddmesgservice
+
+service jrdqxdmservice /system/bin/sh /system/bin/jrdqxdmservice
+    oneshot
+    disabled
+
+on property:persist.sys.jrdqxdm.enable=1
+    start jrdqxdmservice
+
+on property:persist.sys.jrdqxdm.enable=0
+    stop jrdqxdmservice
+
+service jrdtcpdpservice /system/bin/sh /system/bin/jrdtcpdumpservice
+    oneshot
+    disabled
+
+on property:persist.sys.jrdtcpdump.enable=1
+    start jrdtcpdpservice
+
+on property:persist.sys.jrdtcpdump.enable=0
+    stop jrdtcpdpservice
+#gaolu end
 
 on nonencrypted
     class_start late_start
